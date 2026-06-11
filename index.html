@@ -237,7 +237,7 @@
                 <div class="form-group">
                     <label for="numeroCAS">Número CAS (Ou Nome em inglês para busca):</label>
                     <div class="input-with-btn">
-                        <input type="text" id="numeroCAS" placeholder="Ex: 56-81-5 ou Salicylic Acid">
+                        <input type="text" id="numeroCAS" placeholder="Ex: 56-81-5 ou Glycerin">
                         <button type="button" class="btn-search" onclick="buscarDadosAuto()">Buscar na Web</button>
                     </div>
                     <div id="searchLoader" class="loader">Buscando e preenchendo automaticamente... Por favor, aguarde.</div>
@@ -363,7 +363,6 @@
         }
     }
 
-    // CAPTURA 100% AUTOMÁTICA VIA PROXYS DE PRODUÇÃO WEB
     async function buscarDadosAuto() {
         const termo = document.getElementById('numeroCAS').value.trim();
         const loader = document.getElementById('searchLoader');
@@ -376,16 +375,14 @@
         loader.style.display = "block";
 
         try {
-            // Consulta Direta sem proxy (Funciona perfeitamente quando hospedado na Web)
-            const urlPubChem = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(termo)}/property/IUPACName,MolecularFormula,Title/JSON`;
+            const urlPubChem = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(termo)}/property/IUPACName,Title/JSON`;
             const resposta = await fetch(urlPubChem);
             
-            if(!resposta.ok) throw new Error("Não localizado diretamente.");
+            if(!resposta.ok) throw new Error("Não localizado.");
             
             const dados = await resposta.json();
             const prop = dados.PropertyTable.Properties[0];
             
-            // Injeta os dados direto nos inputs da tela!
             document.getElementById('nomeComercial').value = prop.Title || termo;
             document.getElementById('inciName').value = prop.IUPACName || termo;
             document.getElementById('aspecto').value = "Informação disponível no laudo do lote.";
@@ -393,19 +390,7 @@
             
             alert("Sucesso! Os dados foram capturados da internet e injetados nos campos.");
         } catch (error) {
-            // Fallback usando ponte secundária aberta de segurança
-            try {
-                const proxySecundario = "https://api.allorigins.win/raw?url=";
-                const urlAlvo = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(termo)}/property/IUPACName,Title/JSON`;
-                const resAlt = await fetch(proxySecundario + encodeURIComponent(urlAlvo));
-                const dadosAlt = await resAlt.json();
-                const propAlt = dadosAlt.PropertyTable.Properties[0];
-                
-                document.getElementById('nomeComercial').value = propAlt.Title || termo;
-                document.getElementById('inciName').value = propAlt.IUPACName || termo;
-            } catch(e) {
-                alert("Servidor de segurança bloqueou a requisição local. Conclua o Passo 2 para liberar o preenchimento automático.");
-            }
+            alert("Não conseguimos puxar os dados desse registro automaticamente. Verifique se digitou o CAS corretamente (ex: 56-81-5) ou tente pelo nome em inglês (ex: Glycerin).");
         } finally {
             loader.style.display = "none";
         }
