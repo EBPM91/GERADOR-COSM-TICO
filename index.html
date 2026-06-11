@@ -235,7 +235,7 @@
             <div class="form-grid">
                 
                 <div class="form-group">
-                    <label for="numeroCAS">Número CAS (Ou Nome em inglês para busca):</label>
+                    <label for="numeroCAS">Número CAS ou Nome Técnico (em inglês):</label>
                     <div class="input-with-btn">
                         <input type="text" id="numeroCAS" placeholder="Ex: 56-81-5 ou Glycerin">
                         <button type="button" class="btn-search" onclick="buscarDadosAuto()">Buscar na Web</button>
@@ -363,37 +363,68 @@
         }
     }
 
+    // SISTEMA DE ATRAÇÃO HÍBRIDA (BUSCA POR CAS E BUSCA POR NOME)
     async function buscarDadosAuto() {
         const termo = document.getElementById('numeroCAS').value.trim();
         const loader = document.getElementById('searchLoader');
         
         if (!termo) {
-            alert("Insira um termo para busca.");
+            alert("Insira um CAS ou Nome em inglês para busca.");
             return;
         }
 
         loader.style.display = "block";
+        let urlPubChem = "";
+
+        // Testa se o usuário digitou um formato de CAS (apenas números e traços)
+        const ehCAS = /^[0-9-]+$/.test(termo);
+
+        if (ehCAS) {
+            // Se for CAS, faz a rota de conversão de sinônimos do PubChem primeiro
+            urlPubChem = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/xref/RegistryID/${encodeURIComponent(termo)}/property/IUPACName,Title/JSON`;
+        } else {
+            // Se for texto, usa a rota de nome tradicional
+            urlPubChem = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(termo)}/property/IUPACName,Title/JSON`;
+        }
 
         try {
-            const urlPubChem = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(termo)}/property/IUPACName,Title/JSON`;
             const resposta = await fetch(urlPubChem);
             
-            if(!resposta.ok) throw new Error("Não localizado.");
+            if(!resposta.ok) {
+                // Se a busca por CAS falhar na rota principal, tenta o Fallback estruturado
+                if(ehCAS) {
+                    const urlFallback = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(termo)}/property/IUPACName,Title/JSON`;
+                    const resFb = await fetch(urlFallback);
+                    if(!resFb.ok) throw new Error();
+                    vincularDadosNaTela(await resFb.json(), termo);
+                    return;
+                }
+                throw new Error();
+            }
             
             const dados = await resposta.json();
-            const prop = dados.PropertyTable.Properties[0];
-            
-            document.getElementById('nomeComercial').value = prop.Title || termo;
-            document.getElementById('inciName').value = prop.IUPACName || termo;
-            document.getElementById('aspecto').value = "Informação disponível no laudo do lote.";
-            document.getElementById('solubilidade').value = "Favor checar solubilidade no veículo escolhido.";
-            
-            alert("Sucesso! Os dados foram capturados da internet e injetados nos campos.");
+            vincularDadosNaTela(dados, termo);
+
         } catch (error) {
-            alert("Não conseguimos puxar os dados desse registro automaticamente. Verifique se digitou o CAS corretamente (ex: 56-81-5) ou tente pelo nome em inglês (ex: Glycerin).");
+            alert("Não encontramos esse registro exato nas tabelas automáticas. Por favor, digite o nome em inglês (Ex: Glycerin, Salicylic Acid, Glycolic Acid) para que o sistema puxe os dados.");
         } finally {
             loader.style.display = "none";
         }
+    }
+
+    function vincularDadosNaTela(dados, termoOriginal) {
+        const prop = dados.PropertyTable.Properties[0];
+        
+        // Formata o nome para ficar elegante (Primeira Letra Maiúscula)
+        let nomeLimpo = prop.Title ? prop.Title.charAt(0).toUpperCase() + prop.Title.slice(1).toLowerCase() : termoOriginal;
+        let inciLimpo = prop.IUPACName ? prop.IUPACName : nomeLimpo;
+
+        document.getElementById('nomeComercial').value = nomeLimpo;
+        document.getElementById('inciName').value = inciLimpo;
+        document.getElementById('aspecto').value = "Conforme padrão analítico do laudo fornecido.";
+        document.getElementById('solubilidade').value = "Verificar estabilidade na tabela de insumos.";
+        
+        alert("Sucesso! O banco de dados respondeu e preencheu a sua ficha técnica.");
     }
 
     function processarFormulario() {
@@ -446,7 +477,7 @@
             tr.innerHTML = `
                 <td><strong style="color:var(--primary-color);">${item.nomeComercial}</strong></td>
                 <td>
-                    <div style="font-size:12px; color:#7f8c8d;">CAS: ${item.numeroCAS}</div>
+                    <div style="font-size:12px; color:#7f8c8d;">REG: ${item.numeroCAS}</div>
                     <div style="font-size:13px; font-weight:500; color:#34495e;">${item.inciName}</div>
                 </td>
                 <td><span style="font-size:13px; background:#eef2f0; padding:4px 8px; border-radius:12px; color:var(--primary-color); font-weight:500;">${item.funcao}</span></td>
@@ -515,7 +546,7 @@
                 <table class="tech-table">
                     <tr><td class="label-cell">Nome Comercial</td><td class="value-cell" style="font-weight: bold; color: #1b4d3e;">${dados.nomeComercial}</td></tr>
                     <tr><td class="label-cell">Nome INCI Oficial</td><td class="value-cell" style="font-family:monospace;">${dados.inciName}</td></tr>
-                    <tr><td class="label-cell">Número CAS</td><td class="value-cell">${dados.numeroCAS}</td></tr>
+                    <tr><td class="label-cell">Número CAS / Registro</td><td class="value-cell">${dados.numeroCAS}</td></tr>
                     <tr><td class="label-cell">Função na Fórmula</td><td class="value-cell">${dados.funcao}</td></tr>
                 </table>
                 <div class="section-title">2. Critérios Físico-Químicos</div>
