@@ -290,6 +290,16 @@
                     <input type="text" id="pontoFusao" placeholder="Ex: 17.8 °C">
                 </div>
 
+                <div class="form-group">
+                    <label for="densidade">Densidade / Peso Específico:</label>
+                    <input type="text" id="densidade" placeholder="Ex: 1.26 g/cm³ ou 1.01 - 1.05 g/mL">
+                </div>
+
+                <div class="form-group">
+                    <label for="flashPoint">Ponto de Fulgor (Flash Point):</label>
+                    <input type="text" id="flashPoint" placeholder="Ex: 160 °C (vaso fechado) ou N/A">
+                </div>
+
                 <div class="form-group full-width">
                     <label for="origemVegetal">Especificações de Origem Vegetal e Parte Utilizada:</label>
                     <textarea id="origemVegetal" rows="2" placeholder="Ex: Subproduto da fabricação de sabões vegetais."></textarea>
@@ -363,217 +373,20 @@
         }
     }
 
-    // SISTEMA DE ATRAÇÃO HÍBRIDA (BUSCA POR CAS E BUSCA POR NOME)
+    // MOTOR DE BUSCA OTIMIZADO COM EXTENSÃO PARA DENSIDADE E FLASH POINT
     async function buscarDadosAuto() {
         const termo = document.getElementById('numeroCAS').value.trim();
         const loader = document.getElementById('searchLoader');
         
         if (!termo) {
-            alert("Insira um CAS ou Nome em inglês para busca.");
+            alert("Insira um número CAS ou Nome Técnico para busca.");
             return;
         }
 
         loader.style.display = "block";
-        let urlPubChem = "";
-
-        // Testa se o usuário digitou um formato de CAS (apenas números e traços)
-        const ehCAS = /^[0-9-]+$/.test(termo);
-
-        if (ehCAS) {
-            // Se for CAS, faz a rota de conversão de sinônimos do PubChem primeiro
-            urlPubChem = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/xref/RegistryID/${encodeURIComponent(termo)}/property/IUPACName,Title/JSON`;
-        } else {
-            // Se for texto, usa a rota de nome tradicional
-            urlPubChem = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(termo)}/property/IUPACName,Title/JSON`;
-        }
+        let dadosEncontrados = null;
+        let cidQuimico = null;
 
         try {
-            const resposta = await fetch(urlPubChem);
-            
-            if(!resposta.ok) {
-                // Se a busca por CAS falhar na rota principal, tenta o Fallback estruturado
-                if(ehCAS) {
-                    const urlFallback = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(termo)}/property/IUPACName,Title/JSON`;
-                    const resFb = await fetch(urlFallback);
-                    if(!resFb.ok) throw new Error();
-                    vincularDadosNaTela(await resFb.json(), termo);
-                    return;
-                }
-                throw new Error();
-            }
-            
-            const dados = await resposta.json();
-            vincularDadosNaTela(dados, termo);
-
-        } catch (error) {
-            alert("Não encontramos esse registro exato nas tabelas automáticas. Por favor, digite o nome em inglês (Ex: Glycerin, Salicylic Acid, Glycolic Acid) para que o sistema puxe os dados.");
-        } finally {
-            loader.style.display = "none";
-        }
-    }
-
-    function vincularDadosNaTela(dados, termoOriginal) {
-        const prop = dados.PropertyTable.Properties[0];
-        
-        // Formata o nome para ficar elegante (Primeira Letra Maiúscula)
-        let nomeLimpo = prop.Title ? prop.Title.charAt(0).toUpperCase() + prop.Title.slice(1).toLowerCase() : termoOriginal;
-        let inciLimpo = prop.IUPACName ? prop.IUPACName : nomeLimpo;
-
-        document.getElementById('nomeComercial').value = nomeLimpo;
-        document.getElementById('inciName').value = inciLimpo;
-        document.getElementById('aspecto').value = "Conforme padrão analítico do laudo fornecido.";
-        document.getElementById('solubilidade').value = "Verificar estabilidade na tabela de insumos.";
-        
-        alert("Sucesso! O banco de dados respondeu e preencheu a sua ficha técnica.");
-    }
-
-    function processarFormulario() {
-        const numeroCAS = document.getElementById('numeroCAS').value.trim() || "Não especificado";
-        const nomeComercial = document.getElementById('nomeComercial').value.trim();
-        const inciName = document.getElementById('inciName').value.trim();
-        const funcao = document.getElementById('funcao').value;
-        const concentracao = document.getElementById('concentracao').value.trim() || "Não especificado";
-        const aspecto = document.getElementById('aspecto').value.trim() || "Não especificado";
-        const pH = document.getElementById('pH').value.trim() || "Não se aplica";
-        const solubilidade = document.getElementById('solubilidade').value.trim() || "Não especificado";
-        const pontoFusao = document.getElementById('pontoFusao').value.trim() || "Não especificado";
-        const origemVegetal = document.getElementById('origemVegetal').value.trim() || "Substância/Ativo Puro.";
-
-        if (!nomeComercial || !inciName) {
-            alert("Os campos 'Nome Comercial' e 'Nome INCI' são obrigatórios.");
-            return;
-        }
-
-        const ingredienteAtivo = {
-            id: Date.now(), numeroCAS, nomeComercial, inciName, funcao, concentracao, aspecto, pH, solubilidade, pontoFusao, origemVegetal, logo: logoBase64Global
-        };
-
-        let lista = JSON.parse(localStorage.getItem('db_cosmeticos_v2')) || [];
-        lista.push(ingredienteAtivo);
-        localStorage.setItem('db_cosmeticos_v2', JSON.stringify(lista));
-
-        carregarHistorico();
-        gerarVisualizacaoPDF(ingredienteAtivo);
-
-        document.getElementById('formCosmetico').reset();
-        if (logoBase64Global) {
-            document.getElementById('logoPreview').src = logoBase64Global;
-            document.getElementById('logoPreview').style.display = "block";
-        }
-    }
-
-    function carregarHistorico() {
-        const tabelaCorpo = document.getElementById('tabelaCorpo');
-        tabelaCorpo.innerHTML = '';
-        const lista = JSON.parse(localStorage.getItem('db_cosmeticos_v2')) || [];
-
-        if (lista.length === 0) {
-            tabelaCorpo.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#7f8c8d; padding: 25px;">Nenhum ativo registrado neste terminal.</td></tr>`;
-            return;
-        }
-
-        lista.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong style="color:var(--primary-color);">${item.nomeComercial}</strong></td>
-                <td>
-                    <div style="font-size:12px; color:#7f8c8d;">REG: ${item.numeroCAS}</div>
-                    <div style="font-size:13px; font-weight:500; color:#34495e;">${item.inciName}</div>
-                </td>
-                <td><span style="font-size:13px; background:#eef2f0; padding:4px 8px; border-radius:12px; color:var(--primary-color); font-weight:500;">${item.funcao}</span></td>
-                <td>
-                    <div class="actions-cell">
-                        <button class="btn-action btn-pdf" onclick="reimprimirItem(${item.id})">Gerar PDF</button>
-                        <button class="btn-action btn-delete" onclick="deletarItem(${item.id})">Remover</button>
-                    </div>
-                </td>
-            `;
-            tabelaCorpo.appendChild(tr);
-        });
-    }
-
-    function deletarItem(id) {
-        if(confirm("Deseja remover este ativo do banco local?")) {
-            let lista = JSON.parse(localStorage.getItem('db_cosmeticos_v2')) || [];
-            lista = lista.filter(item => item.id !== id);
-            localStorage.setItem('db_cosmeticos_v2', JSON.stringify(lista));
-            carregarHistorico();
-        }
-    }
-
-    function reimprimirItem(id) {
-        const lista = JSON.parse(localStorage.getItem('db_cosmeticos_v2')) || [];
-        const itemEncontrado = lista.find(item => item.id === id);
-        if (itemEncontrado) gerarVisualizacaoPDF(itemEncontrado);
-    }
-
-    function gerarVisualizacaoPDF(dados) {
-        const logoHTML = dados.logo ? `<img src="${dados.logo}" class="doc-logo" alt="Logo">` : `<div style="height:60px; background:#f4f7f5; border-radius:4px;"></div>`;
-
-        const conteudoFicha = `
-            <!DOCTYPE html>
-            <html lang="pt-BR">
-            <head>
-                <meta charset="UTF-8">
-                <title>Especificação Técnica - ${dados.nomeComercial}</title>
-                <style>
-                    @page { size: A4; margin: 20mm 15mm; }
-                    body { font-family: Arial, sans-serif; color: #2c3e50; margin: 0; line-height: 1.6; font-size: 11pt; }
-                    .header-container { display: table; width: 100%; border-bottom: 3px solid #1b4d3e; padding-bottom: 12px; margin-bottom: 25px; }
-                    .header-logo-cell { display: table-cell; vertical-align: middle; width: 40%; }
-                    .header-title-cell { display: table-cell; vertical-align: middle; text-align: right; width: 60%; }
-                    .doc-logo { max-width: 220px; max-height: 75px; object-fit: contain; }
-                    .doc-title { margin: 0; color: #1b4d3e; font-size: 18pt; font-weight: bold; }
-                    .doc-subtitle { margin: 4px 0 0 0; font-size: 9pt; color: #7f8c8d; text-transform: uppercase; font-weight: 600; }
-                    .section-title { background-color: #f4f7f5; padding: 6px 10px; font-weight: bold; color: #1b4d3e; margin-top: 22px; margin-bottom: 12px; border-left: 4px solid #1b4d3e; font-size: 11pt; text-transform: uppercase; page-break-inside: avoid; page-break-after: avoid; }
-                    .tech-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-                    .tech-table td { padding: 8px 12px; border: 1px solid #e2e8f0; vertical-align: top; }
-                    .tech-table td.label-cell { background-color: #f8fafc; font-weight: bold; color: #4a5568; width: 30%; font-size: 10pt; }
-                    .tech-table td.value-cell { color: #1a202c; }
-                    .notice-box { margin-top: 30px; padding: 12px; background-color: #fafbfc; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 8.5pt; color: #718096; text-align: justify; line-height: 1.4; page-break-inside: avoid; }
-                    .footer { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; font-size: 8pt; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 10px; }
-                </style>
-            </head>
-            <body>
-                <div class="header-container">
-                    <div class="header-logo-cell">${logoHTML}</div>
-                    <div class="header-title-cell">
-                        <div class="doc-title">FICHA DE ESPECIFICAÇÃO TÉCNICA</div>
-                        <div class="doc-subtitle">Controle de Insumos & Ativos de P&D Cosmético</div>
-                    </div>
-                </div>
-                <div class="section-title">1. Identificação Regulatória</div>
-                <table class="tech-table">
-                    <tr><td class="label-cell">Nome Comercial</td><td class="value-cell" style="font-weight: bold; color: #1b4d3e;">${dados.nomeComercial}</td></tr>
-                    <tr><td class="label-cell">Nome INCI Oficial</td><td class="value-cell" style="font-family:monospace;">${dados.inciName}</td></tr>
-                    <tr><td class="label-cell">Número CAS / Registro</td><td class="value-cell">${dados.numeroCAS}</td></tr>
-                    <tr><td class="label-cell">Função na Fórmula</td><td class="value-cell">${dados.funcao}</td></tr>
-                </table>
-                <div class="section-title">2. Critérios Físico-Químicos</div>
-                <table class="tech-table">
-                    <tr><td class="label-cell">Aspecto e Cor</td><td class="value-cell">${dados.aspecto}</td></tr>
-                    <tr><td class="label-cell">Faixa de pH Operacional</td><td class="value-cell">${dados.pH}</td></tr>
-                    <tr><td class="label-cell">Perfil de Solubilidade</td><td class="value-cell">${dados.solubilidade}</td></tr>
-                    <tr><td class="label-cell">Ponto de Fusão / Ebulição</td><td class="value-cell">${dados.pontoFusao}</td></tr>
-                </table>
-                <div class="section-title">3. Especificações e Origem</div>
-                <table class="tech-table">
-                    <tr><td class="label-cell">Dados de Origem / Obtenção</td><td class="value-cell" style="font-style: italic;">${dados.origemVegetal}</td></tr>
-                    <tr><td class="label-cell">Concentração Recomendada</td><td class="value-cell" style="font-weight: bold;">${dados.concentracao}</td></tr>
-                </table>
-                <div class="notice-box">
-                    <strong>Declaração de Conformidade Técnica:</strong> As especificações baseiam-se em referências científicas públicas cruzadas. Cabe ao formulador a execução dos testes laboratoriais finais para validação de lote.
-                </div>
-                <div class="footer">Documento de Especificação Interna • Gerado em ${new Date().toLocaleDateString('pt-BR')} • Página 1 de 1</div>
-            </body>
-            </html>
-        `;
-
-        const janelaImpressao = window.open('', '_blank');
-        janelaImpressao.document.write(conteudoFicha);
-        janelaImpressao.document.close();
-        setTimeout(() => { janelaImpressao.print(); }, 600);
-    }
-</script>
-</body>
-</html>
+            // ROTA 1: Busca direta pelo nome
+            let urlPorNome = `
