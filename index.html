@@ -169,6 +169,41 @@
             color: white;
         }
 
+        .assistant-box {
+            display: none;
+            background-color: #fffde7;
+            border: 1px solid #fff59d;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .assistant-box p {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #f57f17;
+        }
+
+        .assistant-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-link-assist {
+            background-color: #f57f17;
+            padding: 8px 14px;
+            font-size: 12px;
+            text-decoration: none;
+            color: white;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .btn-link-assist:hover {
+            background-color: #e65100;
+        }
+
         .table-responsive {
             overflow-x: auto;
         }
@@ -220,7 +255,7 @@
     
     <div class="main-header">
         <h1>P&D Cosmético - Gerador Técnico Avançado</h1>
-        <p>Banco Integrado CosIng & Fichas de Prestígio Comercial Local</p>
+        <p>Banco de Memória Híbrido & Assistente de Links Regulatórios</p>
     </div>
 
     <div class="card">
@@ -229,10 +264,18 @@
             <div class="form-grid">
                 
                 <div class="form-group full-width">
-                    <label for="numeroCAS">Busca de Ativo (Digite o Nome, INCI ou CAS e clique em Auto-Preencher):</label>
+                    <label for="numeroCAS">Busca Automatizada / Inteligente (Nome, INCI ou CAS):</label>
                     <div class="input-with-btn">
-                        <input type="text" id="numeroCAS" placeholder="Ex: Óleo de Girassol, Sunflower, 8001-21-4, Glycerin, Salicylic Acid...">
-                        <button type="button" class="btn-search" onclick="buscarBancoInterno()">Auto-Preencher Campos</button>
+                        <input type="text" id="numeroCAS" placeholder="Ex: Óleo de Girassol, Sunflower, Glycerin, 8001-21-4...">
+                        <button type="button" class="btn-search" onclick="executarBuscaHibrida()">Verificar Insumo</button>
+                    </div>
+                    
+                    <div id="painelAssistente" class="assistant-box">
+                        <p>⚠️ Este ativo ainda não está na memória local. Use os atalhos rápidos abaixo para abrir as fichas técnicas oficiais, preencha os campos e o sistema aprenderá esse padrão para as próximas vezes!</p>
+                        <div class="assistant-links">
+                            <a id="linkCosing" href="#" target="_blank" class="btn-link-assist">🔍 Ver no CosIng (União Europeia)</a>
+                            <a id="linkGoogleFispq" href="#" target="_blank" class="btn-link-assist">📄 Acessar FISPQ/Laudos Comerciais</a>
+                        </div>
                     </div>
                 </div>
 
@@ -339,77 +382,35 @@
 <script>
     let logoBase64Global = "";
 
-    // BANCO DE DADOS INTERNO COSEDITADO (União Europeia CosIng + Padrões Comerciais de Prestígio)
-    const BANCO_COMPLEMENTAR_INSUMOS = [
+    // BANCO PRE-MAPEADO PADRÃO (Sementes Globais)
+    const BANCO_ESTATICO_INICIAL = [
         {
             chaves: ["girassol", "sunflower", "8001-21-4", "helianthus"],
-            nomeComercial: "Óleo de Girassol Puro (NatureInBottle Style)",
+            nomeComercial: "Óleo de Girassol Técnico Extrapuro",
             inciName: "Helianthus Annuus Seed Oil",
             funcao: "Emoliente / Condicionador Vegetal",
-            concentracao: "1,0% a 10,0% (Até 100% em óleos corporais)",
-            aspecto: "Líquido fluido límpido, de coloração amarela pálida.",
-            pH: "Não se aplica (Fase Oleosa Anidra)",
-            solubilidade: "Insolúvel em água; totalmente solúvel em óleos vegetais, minerais e ésteres.",
-            pontoFusao: "-16 °C a -18 °C",
-            densidade: "0.918 - 0.923 g/mL (a 20°C)",
-            flashPoint: ">= 300 °C (Vaso Aberto)",
-            origemVegetal: "Obtido via prensagem mecânica a frio seguida de refino suave das sementes de Helianthus annuus. Rico em ácido oleico e linoleico, agindo na barreira cutânea."
+            concentracao: "1,0% a 10,0%",
+            aspecto: "Líquido fluido límpido, amarelo claro.",
+            pH: "Não se aplica (Fase Oleosa)",
+            solubilidade: "Insolúvel em água; solúvel em lipídios.",
+            pontoFusao: "-17 °C",
+            densidade: "0.918 - 0.923 g/mL",
+            flashPoint: ">= 300 °C",
+            origemVegetal: "Obtido da prensagem mecânica a frio seguida de refino suave das sementes de Helianthus annuus. Alto teor de ácido linoleico protetor."
         },
         {
-            chaves: ["glicerina", "glycerin", "56-81-5", "glicerol"],
-            nomeComercial: "Glicerina Vegetal Bidestilada USP",
+            chaves: ["glicerina", "glycerin", "56-81-5"],
+            nomeComercial: "Glicerina Vegetal USP",
             inciName: "Glycerin",
             funcao: "Umectante / Hidratante Biológico",
             concentracao: "1,0% a 5,0%",
-            aspecto: "Líquido xaroposo viscoso, límpido e completamente incolor.",
-            pH: "5,5 - 7,5 (Solução aquosa a 10%)",
-            solubilidade: "Totalmente miscível em água e álcool etílico; insolúvel em óleos.",
+            aspecto: "Líquido xaroposo viscoso, límpido e incolor.",
+            pH: "5,5 - 7,5",
+            solubilidade: "Miscível em água e álcool.",
             pontoFusao: "17.8 °C",
-            densidade: "1.258 - 1.262 g/cm³",
-            flashPoint: "160 °C (Vaso Fechado)",
-            origemVegetal: "Composto orgânico derivado da hidrólise de óleos vegetais nativos (origem sustentável)."
-        },
-        {
-            chaves: ["salicilico", "salicylic", "69-72-7"],
-            nomeComercial: "Ácido Salicílico Ativo USP",
-            inciName: "Salicylic Acid",
-            funcao: "Ativo de Alta Eficácia / Fitoterápico",
-            concentracao: "0,5% a 2,0% (Limites Anvisa)",
-            aspecto: "Cristais brancos aciculares ou pó cristalino volumoso.",
-            pH: "2,0 - 3,0 (Solução Saturada)",
-            solubilidade: "Pouco solúvel em água; altamente solúvel em etanol e propilenoglicol.",
-            pontoFusao: "159 °C",
-            densidade: "1.44 g/cm³",
-            flashPoint: "157 °C",
-            origemVegetal: "Síntese técnica idêntica à natural ou derivado estrutural biológico."
-        },
-        {
-            chaves: ["cafeina", "caffeine", "58-08-2"],
-            nomeComercial: "Cafeína Anidra Pura 100%",
-            inciName: "Caffeine",
-            funcao: "Ativo de Alta Eficácia / Fitoterápico",
-            concentracao: "0,5% a 3,0%",
-            aspecto: "Pó cristalino branco, inodoro e de sabor amargo.",
-            pH: "5,5 - 6,5 (Solução aquosa 1%)",
-            solubilidade: "Solúvel em água quente; moderadamente solúvel em água fria e etanol.",
-            pontoFusao: "235 °C",
-            densidade: "1.23 g/cm³",
-            flashPoint: "Não aplicável",
-            origemVegetal: "Alcaloide extraído de grãos de café selecionados ou síntese de alta pureza farmacêutica."
-        },
-        {
-            chaves: ["amendoas", "almond", "8007-69-0", "prunus"],
-            nomeComercial: "Óleo de Amêndoas Doces Linha Prestige",
-            inciName: "Prunus Amygdalus Dulcis Oil",
-            funcao: "Emoliente / Condicionador Vegetal",
-            concentracao: "2,0% a 10,0%",
-            aspecto: "Líquido oleoso límpido, amarelo claro, odor suave.",
-            pH: "Não se aplica",
-            solubilidade: "Lipossolúvel",
-            pontoFusao: "-10 °C",
-            densidade: "0.911 - 0.916 g/mL",
-            flashPoint: "> 280 °C",
-            origemVegetal: "Prensagem a frio das amêndoas doces da árvore Prunus dulcis. Amaciante e nutritivo."
+            densidade: "1.26 g/cm³",
+            flashPoint: "160 °C",
+            origemVegetal: "Derivado da hidrólise de óleos vegetais nativos."
         }
     ];
 
@@ -424,36 +425,48 @@
         }
     });
 
-    // SISTEMA DE INTERCEPTAÇÃO E MAPEAMENTO DIRETO
-    function buscarBancoInterno() {
+    // MOTOR HÍBRIDO INTELIGENTE
+    function executarBuscaHibrida() {
         const input = document.getElementById('numeroCAS').value.trim().toLowerCase();
+        const painel = document.getElementById('painelAssistente');
         
         if (!input) {
-            alert("Por favor, digite uma palavra ou CAS para pesquisar.");
+            alert("Por favor, insira o nome de um ativo ou código CAS.");
             return;
         }
 
-        // Procura correspondência parcial em todas as tags/chaves do banco integrado
-        const correspondencia = BANCO_COMPLEMENTAR_INSUMOS.find(item => {
-            return item.chaves.some(chave => input.includes(chave) || chave.includes(input));
-        });
+        // 1. Procura primeiro no banco fixo inicial
+        let achado = BANCO_ESTATICO_INICIAL.find(item => item.chaves.some(c => input.includes(c) || c.includes(input)));
 
-        if (correspondencia) {
-            document.getElementById('nomeComercial').value = correspondencia.nomeComercial;
-            document.getElementById('inciName').value = correspondencia.inciName;
-            document.getElementById('funcao').value = correspondencia.funcao;
-            document.getElementById('concentracao').value = correspondencia.concentracao;
-            document.getElementById('aspecto').value = correspondencia.aspecto;
-            document.getElementById('pH').value = correspondencia.pH;
-            document.getElementById('solubilidade').value = correspondencia.solubilidade;
-            document.getElementById('pontoFusao').value = correspondencia.pontoFusao;
-            document.getElementById('densidade').value = correspondencia.densidade;
-            document.getElementById('flashPoint').value = correspondencia.flashPoint;
-            document.getElementById('origemVegetal').value = correspondencia.origemVegetal;
+        // 2. Se não achar, procura na memória dinâmica gerada pelo próprio usuário
+        if (!achado) {
+            const memoriaDinamica = JSON.parse(localStorage.getItem('db_aprendido_sistema')) || [];
+            achado = memoriaDinamica.find(item => item.termoBusca === input || item.inciName.toLowerCase().includes(input));
+        }
 
-            alert(`Dados validados e carregados com sucesso de acordo com referências técnicas comerciais e regulatórias.`);
+        if (achado) {
+            painel.style.display = "none";
+            document.getElementById('nomeComercial').value = achado.nomeComercial;
+            document.getElementById('inciName').value = achado.inciName;
+            document.getElementById('funcao').value = achado.funcao;
+            document.getElementById('concentracao').value = achado.concentracao;
+            document.getElementById('aspecto').value = achado.aspecto;
+            document.getElementById('pH').value = achado.pH;
+            document.getElementById('solubilidade').value = achado.solubilidade;
+            document.getElementById('pontoFusao').value = achado.pontoFusao;
+            document.getElementById('densidade').value = achado.densidade;
+            document.getElementById('flashPoint').value = achado.flashPoint;
+            document.getElementById('origemVegetal').value = achado.origemVegetal;
+            alert("Dados resgatados da memória técnica com sucesso!");
         } else {
-            alert(`O ativo "${document.getElementById('numeroCAS').value}" não está pré-mapeado de forma fixa.\n\nVocê pode preencher os campos manualmente de forma livre para gerar seu documento PDF agora mesmo!`);
+            // 3. Ativo Inédito: Configura os links inteligentes focados para o usuário coletar o dado sem travas
+            painel.style.display = "block";
+            
+            // Link CosIng limpo para busca regulatória europeia
+            document.getElementById('linkCosing').href = `https://ec.europa.eu/growth/tools-databases/cosing/index.cfm?fuseaction=search.results&searchkeyword=${encodeURIComponent(input)}`;
+            
+            // Busca simplificada de laudos e fichas comerciais no Google (sem travar)
+            document.getElementById('linkGoogleFispq').href = `https://www.google.com/search?q=${encodeURIComponent(input)}+technical+data+sheet+pdf`;
         }
     }
 
@@ -474,7 +487,8 @@
     }
 
     function processarFormulario() {
-        const numeroCAS = document.getElementById('numeroCAS').value.trim() || "Mapeamento Direto / Sob Consulta";
+        const termoBusca = document.getElementById('numeroCAS').value.trim().toLowerCase();
+        const numeroCAS = document.getElementById('numeroCAS').value.trim() || "Sob Consulta";
         const nomeComercial = document.getElementById('nomeComercial').value.trim();
         const inciName = document.getElementById('inciName').value.trim();
         const funcao = document.getElementById('funcao').value;
@@ -485,7 +499,7 @@
         const pontoFusao = document.getElementById('pontoFusao').value.trim() || "Não especificado";
         const densidade = document.getElementById('densidade').value.trim() || "Não especificado";
         const flashPoint = document.getElementById('flashPoint').value.trim() || "Não especificado";
-        const origemVegetal = document.getElementById('origemVegetal').value.trim() || "Informação não mapeada.";
+        const origemVegetal = document.getElementById('origemVegetal').value.trim() || "Informação sob consulta.";
 
         if (!nomeComercial || !inciName) {
             alert("Os campos 'Nome Comercial' e 'Nome INCI' são essenciais.");
@@ -493,17 +507,26 @@
         }
 
         const ingredienteAtivo = {
-            id: Date.now(), numeroCAS, nomeComercial, inciName, funcao, concentracao, aspecto, pH, solubilidade, pontoFusao, densidade, flashPoint, origemVegetal, logo: logoBase64Global
+            id: Date.now(), termoBusca, numeroCAS, nomeComercial, inciName, funcao, concentracao, aspecto, pH, solubilidade, pontoFusao, densidade, flashPoint, origemVegetal, logo: logoBase64Global
         };
 
+        // Salva no histórico de documentos gerados
         let lista = JSON.parse(localStorage.getItem('db_cosmeticos_v2')) || [];
         lista.push(ingredienteAtivo);
         localStorage.setItem('db_cosmeticos_v2', JSON.stringify(lista));
+
+        // APRENDIZADO AUTOMÁTICO: Salva no banco dinâmico para preencher sozinho da próxima vez!
+        let memoriaDinamica = JSON.parse(localStorage.getItem('db_aprendido_sistema')) || [];
+        if(!memoriaDinamica.some(item => item.termoBusca === termoBusca)){
+            memoriaDinamica.push(ingredienteAtivo);
+            localStorage.setItem('db_aprendido_sistema', JSON.stringify(memoriaDinamica));
+        }
 
         carregarHistorico();
         gerarVisualizacaoPDF(ingredienteAtivo);
 
         document.getElementById('formCosmetico').reset();
+        document.getElementById('painelAssistente').style.display = "none";
         if (logoBase64Global) {
             document.getElementById('logoPreview').src = logoBase64Global;
             document.getElementById('logoPreview').style.display = "block";
@@ -549,7 +572,6 @@
         }
     }
 
-    // GERAÇÃO DE PDF E RE-IMPRESSÃO IMEDIATA
     function reimprimirItem(id) {
         const lista = JSON.parse(localStorage.getItem('db_cosmeticos_v2')) || [];
         const itemEncontrado = lista.find(item => item.id === id);
@@ -595,7 +617,7 @@
                 <table class="tech-table">
                     <tr><td class="label-cell">Nome Comercial</td><td class="value-cell" style="font-weight: bold; color: #1b4d3e;">${dados.nomeComercial}</td></tr>
                     <tr><td class="label-cell">Nome INCI Oficial</td><td class="value-cell" style="font-family:monospace;">${dados.inciName}</td></tr>
-                    <tr><td class="label-cell">Filtro de Busca / CAS</td><td class="value-cell">${dados.numeroCAS}</td></tr>
+                    <tr><td class="label-cell">Identificador / CAS</td><td class="value-cell">${dados.numeroCAS}</td></tr>
                     <tr><td class="label-cell">Função na Fórmula</td><td class="value-cell">${dados.funcao}</td></tr>
                 </table>
                 <div class="section-title">2. Critérios Físico-Químicos</div>
