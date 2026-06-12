@@ -97,7 +97,8 @@
 
         .input-with-btn {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         input, select, textarea { 
@@ -142,12 +143,12 @@
         button { 
             background-color: var(--primary-color); 
             color: white; 
-            padding: 12px 24px; 
+            padding: 12px 20px; 
             border: none; 
             border-radius: 6px; 
             cursor: pointer; 
             font-weight: bold; 
-            font-size: 14px;
+            font-size: 13px;
             transition: background 0.2s, transform 0.1s;
         }
 
@@ -161,10 +162,18 @@
 
         .btn-search {
             background-color: var(--accent-color);
-            white-space: nowrap;
+            color: #1b4d3e;
         }
         .btn-search:hover {
             background-color: #a88f39;
+            color: #fff;
+        }
+
+        .btn-google {
+            background-color: #4285f4;
+        }
+        .btn-google:hover {
+            background-color: #357ae8;
         }
 
         .loader {
@@ -226,7 +235,7 @@
     
     <div class="main-header">
         <h1>P&D Cosmético - Gerador Técnico Avançado</h1>
-        <p>Formulação de Literaturas Automatizada via API Global (Ambiente Web Ativo)</p>
+        <p>Formulação de Literaturas Automatizada via Enciclopédia Global & Motores Web</p>
     </div>
 
     <div class="card">
@@ -234,21 +243,22 @@
         <form id="formCosmetico">
             <div class="form-grid">
                 
-                <div class="form-group">
-                    <label for="numeroCAS">Número CAS ou Nome Técnico (em inglês):</label>
+                <div class="form-group full-width">
+                    <label for="numeroCAS">Digite o Nome do Ativo/Insumo (Ex: Sunflower seed oil, Glycerin, Caffeine ou CAS):</label>
                     <div class="input-with-btn">
-                        <input type="text" id="numeroCAS" placeholder="Ex: 56-81-5 ou Sunflower seed oil">
-                        <button type="button" class="btn-search" onclick="buscarDadosAuto()">Buscar na Web</button>
+                        <input type="text" id="numeroCAS" style="flex: 1; min-width: 250px;" placeholder="Ex: Sunflower seed oil ou 8001-21-4">
+                        <button type="button" class="btn-search" onclick="buscarDadosWikipedia()">Buscar na Wikipedia</button>
+                        <button type="button" class="btn-google" onclick="abrirBuscaGoogle()">Pesquisar no Google</button>
                     </div>
-                    <div id="searchLoader" class="loader">Buscando e preenchendo automaticamente... Por favor, aguarde.</div>
+                    <div id="searchLoader" class="loader">Consultando base de dados biológica e enciclopédica... Por favor, aguarde.</div>
                 </div>
 
                 <div class="form-group">
                     <label for="nomeComercial">Nome Comercial da Matéria-Prima / Ativo:</label>
-                    <input type="text" id="nomeComercial" required placeholder="Ex: VegActive Pure Oil">
+                    <input type="text" id="nomeComercial" required placeholder="Ex: Óleo de Girassol Técnico Extrapuro">
                 </div>
                 
-                <div class="form-group full-width">
+                <div class="form-group">
                     <label for="inciName">Nome INCI (Nomenclatura Oficial):</label>
                     <input type="text" id="inciName" required placeholder="Ex: Helianthus Annuus Seed Oil">
                 </div>
@@ -256,9 +266,9 @@
                 <div class="form-group">
                     <label for="funcao">Função Cosmética Principal:</label>
                     <select id="funcao">
+                        <option value="Emoliente / Condicionador Vegetal">Emoliente / Condicionador Vegetal</option>
                         <option value="Ativo de Alta Eficácia / Fitoterápico">Ativo de Alta Eficácia / Fitoterápico</option>
                         <option value="Umectante / Hidratante Biológico">Umectante / Hidratante Biológico</option>
-                        <option value="Emoliente / Condicionador Vegetal">Emoliente / Condicionador Vegetal</option>
                         <option value="Antioxidante / Protetor de Fórmula">Antioxidante / Protetor de Fórmula</option>
                         <option value="Tensioativo / Agente de Limpeza Suave">Tensioativo / Agente de Limpeza Suave</option>
                         <option value="Conservante / Sistema de Proteção">Conservante / Sistema de Proteção</option>
@@ -272,22 +282,22 @@
 
                 <div class="form-group">
                     <label for="aspecto">Aspecto Físico, Estado e Cor:</label>
-                    <input type="text" id="aspecto" placeholder="Ex: Líquido oleoso, amarelado">
+                    <input type="text" id="aspecto" placeholder="Ex: Líquido límpido, levemente amarelado">
                 </div>
 
                 <div class="form-group">
                     <label for="pH">Faixa de pH de Estabilidade / Atuação:</label>
-                    <input type="text" id="pH" placeholder="Ex: 4,0 - 7,0">
+                    <input type="text" id="pH" placeholder="Ex: 4,0 - 7,0 ou N/A">
                 </div>
 
                 <div class="form-group">
                     <label for="solubilidade">Solubilidade Encontrada:</label>
-                    <input type="text" id="solubilidade" placeholder="Ex: Solúvel em óleos e lipídios">
+                    <input type="text" id="solubilidade" placeholder="Ex: Solúvel em óleos e solventes orgânicos">
                 </div>
 
                 <div class="form-group">
                     <label for="pontoFusao">Ponto de Fusão / Ebulição:</label>
-                    <input type="text" id="pontoFusao" placeholder="Ex: N/A">
+                    <input type="text" id="pontoFusao" placeholder="Ex: -17 °C">
                 </div>
 
                 <div class="form-group">
@@ -301,8 +311,8 @@
                 </div>
 
                 <div class="form-group full-width">
-                    <label for="origemVegetal">Especificações de Origem Vegetal e Parte Utilizada:</label>
-                    <textarea id="origemVegetal" rows="2" placeholder="Ex: Extraído por prensagem a frio das sementes de Helianthus annuus."></textarea>
+                    <label for="origemVegetal">Resumo Técnico / Descrição e Origem Obtenção:</label>
+                    <textarea id="origemVegetal" rows="3" placeholder="Dados descritivos automáticos ou notas de P&D aparecerão aqui."></textarea>
                 </div>
 
                 <div class="form-group full-width">
@@ -373,117 +383,70 @@
         }
     }
 
-    // MOTOR DE BUSCA CORRIGIDO - PREVENTIVO CONTRA ESPAÇOS E STRINGS EM BRANCO
-    async function buscarDadosAuto() {
-        const inputCampo = document.getElementById('numeroCAS');
-        if (!inputCampo) return;
-
-        const termo = inputCampo.value.trim();
+    // NOVO MOTOR 1: WIKIPEDIA GLOBAL API (Excelente para óleos, botânica e químicos no geral)
+    async function buscarDadosWikipedia() {
+        const termo = document.getElementById('numeroCAS').value.trim();
         const loader = document.getElementById('searchLoader');
         
-        if (!termo || termo.length === 0) {
-            alert("Por favor, insira um número CAS ou Nome Técnico em inglês no campo antes de buscar.");
+        if (!termo) {
+            alert("Por favor, digite um nome de ingrediente ativo ou CAS antes de buscar.");
             return;
         }
 
         loader.style.display = "block";
-        let dadosEncontrados = null;
-        let cidQuimico = null;
-
-        // Trata o termo para codificação segura de URLs (remove quebras de espaço problemáticas)
-        const termoTratadoUrl = encodeURIComponent(termo);
 
         try {
-            // TENTATIVA 1: Busca direta por Nome/Substância via API Oficial do PubChem
-            let urlPorNome = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${termoTratadoUrl}/property/IUPACName,Title/JSON`;
-            let resposta = await fetch(urlPorNome);
+            // Consulta os sumários oficiais da Wikipedia em inglês (maior acervo técnico do mundo)
+            let url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(termo)}`;
+            let resposta = await fetch(url);
             
-            if (resposta.ok) {
-                dadosEncontrados = await resposta.json();
-                cidQuimico = dadosEncontrados.PropertyTable.Properties[0].CID;
-            } else {
-                // TENTATIVA 2: Busca reversa por sinônimos ou CAS Registry
-                let urlPorCid = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/substance/name/${termoTratadoUrl}/cids/JSON`;
-                let resCid = await fetch(urlPorCid);
-                
-                if (resCid.ok) {
-                    let dadosCid = await resCid.json();
-                    if(dadosCid.InformationList && dadosCid.InformationList.Information[0].CID) {
-                        cidQuimico = dadosCid.InformationList.Information[0].CID[0];
-                        
-                        let urlPropriedades = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cidQuimico}/property/IUPACName,Title/JSON`;
-                        let resProp = await fetch(urlPropriedades);
-                        if (resProp.ok) {
-                            dadosEncontrados = await resProp.json();
-                        }
-                    }
-                }
+            if (!resposta.ok) {
+                // Segunda tentativa: tenta na Wikipedia em Português se em inglês falhar
+                url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(termo)}`;
+                resposta = await fetch(url);
             }
 
-            if (dadosEncontrados && dadosEncontrados.PropertyTable && dadosEncontrados.PropertyTable.Properties) {
-                let dadosFisicosExtras = { densidade: "", flashPoint: "" };
-                if (cidQuimico) {
-                    try {
-                        let urlDadosExtras = `https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/${cidQuimico}/JSON`;
-                        let resExtras = await fetch(urlDadosExtras);
-                        if(resExtras.ok) {
-                            let jsonExtras = await resExtras.json();
-                            dadosFisicosExtras = extrairPropriedadesAvancadas(jsonExtras);
-                        }
-                    } catch(e) { console.log("Dados físicos secundários omitidos."); }
+            if (resposta.ok) {
+                let dados = await resposta.json();
+                
+                // Mapeia títulos e dados enciclopédicos coletados
+                document.getElementById('nomeComercial').value = dados.title;
+                document.getElementById('inciName').value = dados.title; // Insumos vegetais costumam ter o próprio nome comum ou científico como base INCI
+                document.getElementById('origemVegetal').value = dados.extract || "Nenhum detalhe extra encontrado.";
+                
+                // Preenchimentos inteligentes padrão para óleos e extratos encontrados na enciclopédia
+                if(termo.toLowerCase().includes("oil") || termo.toLowerCase().includes("extract") || termo.includes("8001-21-4")) {
+                    document.getElementById('aspecto').value = "Líquido viscoso/oleoso característico.";
+                    document.getElementById('solubilidade').value = "Lipossolúvel (Solúvel em fases oleosas/lipídicas).";
+                    document.getElementById('pH').value = "N/A (Fase Oleosa Pura)";
+                } else {
+                    document.getElementById('aspecto').value = "Padrão analítico conforme laudo técnico do fornecedor.";
+                    document.getElementById('solubilidade').value = "Verificar comportamento na pré-mistura.";
                 }
 
-                vincularDadosNaTela(dadosEncontrados, termo, dadosFisicosExtras);
+                alert(`Sucesso! Encontramos os registros enciclopédicos para: "${dados.title}" e preenchemos a estrutura base.`);
             } else {
-                throw new Error();
+                alert("Não localizamos um artigo exato para este termo na API direta da Wikipedia.\n\nUse o botão ao lado 'Pesquisar no Google' para colher a FISPQ/Laudo rapidamente e preencher os campos complementares!");
             }
 
         } catch (error) {
-            alert("Não encontramos esse registro exato nas tabelas automatizadas do PubChem.\n\nIsso acontece muito com óleos naturais (óleos de sementes/plantas), pois as bases químicas mundiais costumam registrá-los sob componentes isolados ou nomes científicos puros.\n\nExperimente testar com:\n- 8001-21-4 (CAS do Óleo de Girassol)\n- 56-81-5 (Glicerina)\n- Salicylic Acid");
+            alert("Erro na conexão com o servidor de dados enciclopédico.");
         } finally {
             loader.style.display = "none";
         }
     }
 
-    function extrairPropriedadesAvancadas(json) {
-        let resultados = { densidade: "", flashPoint: "" };
-        try {
-            let secoes = json.Record.Section;
-            secoes.forEach(sec => {
-                if(sec.TOCHeading === "Chemical and Physical Properties") {
-                    sec.Section.forEach(subSec => {
-                        if(subSec.TOCHeading === "Experimental Properties") {
-                            subSec.Section.forEach(prop => {
-                                if(prop.TOCHeading === "Density" && prop.Information) {
-                                    resultados.densidade = prop.Information[0].Value.StringWithMarkup[0].String;
-                                }
-                                if(prop.TOCHeading === "Flash Point" && prop.Information) {
-                                    resultados.flashPoint = prop.Information[0].Value.StringWithMarkup[0].String;
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-        } catch(e){}
-        return resultados;
-    }
-
-    function vincularDadosNaTela(dados, termoOriginal, extras) {
-        const prop = dados.PropertyTable.Properties[0];
-        
-        let nomeLimpo = prop.Title ? prop.Title.charAt(0).toUpperCase() + prop.Title.slice(1).toLowerCase() : termoOriginal;
-        let inciLimpo = prop.IUPACName ? prop.IUPACName : nomeLimpo;
-
-        document.getElementById('nomeComercial').value = nomeLimpo;
-        document.getElementById('inciName').value = inciLimpo;
-        document.getElementById('aspecto').value = "Conforme padrão analítico do laudo fornecido.";
-        document.getElementById('solubilidade').value = "Verificar estabilidade na tabela de insumos.";
-        
-        document.getElementById('densidade').value = extras.densidade || "Verificar especificação do lote.";
-        document.getElementById('flashPoint').value = extras.flashPoint || "Informação disponível na FISPQ do fabricante.";
-        
-        alert("Sucesso! O banco de dados do PubChem respondeu e preencheu a sua ficha técnica.");
+    // NOVO MOTOR 2: AUXILIAR DE INTELIGÊNCIA COM GOOGLE (Contorna travas CORS de segurança)
+    function abrirBuscaGoogle() {
+        const termo = document.getElementById('numeroCAS').value.trim();
+        if(!termo) {
+            alert("Digite o nome do composto ou CAS para gerar o link de pesquisa estruturada.");
+            return;
+        }
+        // Monta uma string de busca cirúrgica para trazer laudos técnicos e fichas de especificação regulatória
+        const queryEspecifica = `${termo} "INCI name" "Ficha técnica" OR "FISPQ" filetype:pdf`;
+        const urlGoogle = `https://www.google.com/search?q=${encodeURIComponent(queryEspecifica)}`;
+        window.open(urlGoogle, '_blank');
     }
 
     function processarFormulario() {
@@ -498,10 +461,10 @@
         const pontoFusao = document.getElementById('pontoFusao').value.trim() || "Não especificado";
         const densidade = document.getElementById('densidade').value.trim() || "Não especificado";
         const flashPoint = document.getElementById('flashPoint').value.trim() || "Não especificado";
-        const origemVegetal = document.getElementById('origemVegetal').value.trim() || "Substância/Ativo Puro.";
+        const origemVegetal = document.getElementById('origemVegetal').value.trim() || "Informação não mapeada.";
 
         if (!nomeComercial || !inciName) {
-            alert("Os campos 'Nome Comercial' e 'Nome INCI' são obrigatórios.");
+            alert("Os campos 'Nome Comercial' e 'Nome INCI' são essenciais.");
             return;
         }
 
@@ -538,7 +501,7 @@
             tr.innerHTML = `
                 <td><strong style="color:var(--primary-color);">${item.nomeComercial}</strong></td>
                 <td>
-                    <div style="font-size:12px; color:#7f8c8d;">REG: ${item.numeroCAS}</div>
+                    <div style="font-size:12px; color:#7f8c8d;">REG/Ref: ${item.numeroCAS}</div>
                     <div style="font-size:13px; font-weight:500; color:#34495e;">${item.inciName}</div>
                 </td>
                 <td><span style="font-size:13px; background:#eef2f0; padding:4px 8px; border-radius:12px; color:var(--primary-color); font-weight:500;">${item.funcao}</span></td>
@@ -605,7 +568,7 @@
                 </div>
                 <div class="section-title">1. Identificação Regulatória</div>
                 <table class="tech-table">
-                    <tr><td class="label-cell">Nome Comercial</td><td class="value-cell" style="font-weight: bold; color: #1b4d3e;">${dados.nomeComercial}</td></tr>
+                    <tr><td class="label-cell">Nome Comercial / Ref</td><td class="value-cell" style="font-weight: bold; color: #1b4d3e;">${dados.nomeComercial}</td></tr>
                     <tr><td class="label-cell">Nome INCI Oficial</td><td class="value-cell" style="font-family:monospace;">${dados.inciName}</td></tr>
                     <tr><td class="label-cell">Número CAS / Registro</td><td class="value-cell">${dados.numeroCAS}</td></tr>
                     <tr><td class="label-cell">Função na Fórmula</td><td class="value-cell">${dados.funcao}</td></tr>
@@ -619,9 +582,9 @@
                     <tr><td class="label-cell">Densidade / Peso Específico</td><td class="value-cell">${dados.densidade}</td></tr>
                     <tr><td class="label-cell">Ponto de Fulgor (Flash Point)</td><td class="value-cell">${dados.flashPoint}</td></tr>
                 </table>
-                <div class="section-title">3. Especificações e Origem</div>
+                <div class="section-title">3. Especificações e Resumo Descritivo</div>
                 <table class="tech-table">
-                    <tr><td class="label-cell">Dados de Origem / Obtenção</td><td class="value-cell" style="font-style: italic;">${dados.origemVegetal}</td></tr>
+                    <tr><td class="label-cell">Descrição / Notas Estudo</td><td class="value-cell" style="text-align: justify;">${dados.origemVegetal}</td></tr>
                     <tr><td class="label-cell">Concentração Recomendada</td><td class="value-cell" style="font-weight: bold;">${dados.concentracao}</td></tr>
                 </table>
                 <div class="notice-box">
